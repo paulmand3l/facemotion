@@ -76,7 +76,7 @@ Face = (function() {
         this.recipes = morphology.recipes;
         this.muscles = {};
 
-        this.showMuscles = 1;
+        this.showMuscles = true;
 
         this.assemble(morphology);
         this.attachMuscles(morphology);
@@ -99,11 +99,15 @@ Face = (function() {
             });
         });
 
-        $.each(this.muscles, function(name, value) {
-            this.muscles[name] = pulls[name];
-        });
+        this.setMuscles(pulls);
 
         return pulls;
+    };
+
+    FaceConstructor.prototype.setMuscles = function(musclePulls) {
+        $.each(musclePulls, function(muscle, pull) {
+            face.muscles[muscle] = pull;
+        });
     };
 
     FaceConstructor.prototype.forEachPoint = function(func) {
