@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="javascripts/scale.fix.js"></script>
+    <script src="javascripts/paper.js"></script>
+    <script src="javascripts/facemotion.js"></script>
+    <script src="javascripts/morphologies.js"></script>
+    <script src="javascripts/demo.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -30,43 +34,181 @@
 
       </header>
       <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <div class="wikistyle content-body markdown-body"><h1>facemotion</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>facemotion.js is a library to quickly and easily create an expressive face on your website.  The face is based on a physics simulation of the muscles and tissues of the human face.  The mapping of expressions to muscles comes from the excellent charts in Scott McCloud's <a href="http://www.amazon.com/Making-Comics-Storytelling-Secrets-Graphic/dp/0060780940">Making Comics</a>.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<canvas id="face"></canvas>
+
+<h1>Dependencies</h1>
+
+<p>The facemotion.js library depends on HTML5 Canvas and <a href="http://paperjs.org/">Paper.js</a>.</p>
+
+<p>You'll also need to include both <code>facemotion.js</code> and <code>morphologies.js</code></p>
+
+<h1>Usage</h1>
+
+<p>I'll be honest, the API isn't ideal.  This was made as a class project and I was building for myself, not for reusability.  Want to improve it?  Send a pull request.</p>
+
+<p>Let's start by setting up Paper.  Install it on the window, then attach it to a particular canvas.</p>
+
+<pre><code>### HTML
+&lt;canvas id="face"&gt;&lt;/canvas&gt;
+
+### Javascript
+paper.install(window);
+paper.setup('face');
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>Initialize the face with the included morphology.</p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<pre><code>var face = new Face(male);
+face.showMuscles = false;
+</code></pre>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p><code>showMuscles</code> is a debugging tool which shows all the muscles of the face and how engaged they are, so you can understand what's going on.  It'd probably be a pretty cool visualization for doctors learning about the musculature of the face.</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p>Draw Paper's view and set it to continuously render the face.  Remember, facemotion.js is a physics simulator for the muscles, so <code>face.loop</code> needs to be called every frame.</p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<pre><code>view.draw()
+view.onFrame = function(event) {
+    face.loop(event);
+}
+</code></pre>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p>To set the muscles or emotions, use <code>face.setEmotions(emotions)</code> or <code>face.setMuscles(musclePulls)</code>.</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p><code>face.setEmotions(emotions)</code> takes one argument, <code>emotions</code>, which is a dictionary of emotions named in <code>morphologies.js</code> (<code>joy</code>, <code>sadness</code>, <code>anger</code>, etc) mapped to a strength from 0 - 1, inclusive.  It returns the a dictionary of muscle-pulls needed to create that expression or mix of expressions.</p>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<pre><code>face.setEmotions({joy: 0.8});
+</code></pre>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p><code>face.setMuscles(musclePulls)</code> takes one argument, <code>musclePulls</code> which is a dictionary of muscleGroups named in <code>morphologies.js</code> mapped to a strength from 0-1, inclusive.  This is the same object returned by <code>face.setEmotions()</code>.</p>
+
+<pre><code>face.setEmotions({'zygomaticus': 0.75});
+</code></pre>
+
+<h1>Morphologies.js</h1>
+
+<p>In order to know what the face looks like and where the muscles go, facemotion ships with a basic morphologies descriptor file.  This is just json which describes the various lines and points, as well as the muscles and emotional mixes of the face.  The file only describes half the face and mirrors it to get the other side.</p>
+
+<p><code>stiffness</code> and <code>damping</code> control the properties of the facial flesh.  <code>stiffness</code> defines a restoring force on each point of the face and <code>damping</code> controls how much energy is absorbed by the flesh when the points moved.</p>
+
+<h2>Features</h2>
+
+<p><code>features</code> describes the line segments that are used to draw the face.  <code>points</code> are the points which make up the line segments, connected in the order given.  These points are also the only points you can attach muscles to.  <code>weight</code> is the line-weight to use for the line.  If you want to use a circle instead of a line, you can include <code>type: 'circle'</code> and specify some other options, documented in the morphology.</p>
+
+<p>The coordinate system's origin is directly between the eyes (eyeballs are at <code>y:0</code>).  Positive y is down the face, x is absolute value since it's mirrored.</p>
+
+<pre><code>'features': {
+    ...
+    'chin': {
+        'points': [
+            {x: 0, y:229},
+            {x: 10, y: 230}
+        ],
+        'weight': 1
+    }
+    ...
+}
+</code></pre>
+
+<p>draws</p>
+
+<p><img src="http://i.imgur.com/jnRbjB8.png" alt="the chin" title=""></p>
+
+<h2>Muscle Groups</h2>
+
+<p>Individual muscles are grouped into named <code>muscleGroups</code> which correspond with human anatomy.  Each muscle group is given an overall <code>strength</code> (how strong the muscle group pulls), a <code>stroke</code> (how far the muscles contract), an <code>origin</code> (where all the muscles connect) and an object of <code>muscles</code>.</p>
+
+<p>The <code>muscles</code> object specifies the individual muscles in the group, which points they attach to, and the strength with which they pull.  The muscle name needs to be of the form <code>feature:index</code>, where the feature is the name of one of the features given, and the index is which feature point to attach to.</p>
+
+<pre><code>'muscleGroups': {
+    ...
+    'mentalis': {
+        'strength': 10,
+        'stroke': 70,
+        'origin': {x: 0, y: 0},
+        'muscles': {
+            'chin:0': 1,
+            'chin:1': 1
+        }
+    },
+    ...
+}
+</code></pre>
+
+<p>describes the muscle that lets you move your chin up and down a bit.  It's a fairly weak muscle with a long movement that is connected to the origin (right between the eyes).  The group contains two muscles which each connect to a point on the chin and pull up.</p>
+
+<p>In reality, the mentalis muscle displaces the chin, which pushes the lower lip up slightly as well, so in <code>morphologies.js</code>, you'll see muscles that connect to the mouth in addition to the chin.</p>
+
+<h2>Recipes</h2>
+
+<p>The <code>recipes</code> match an emotion to the muscles which that emotion activates.</p>
+
+<pre><code>recipes: {
+    ...
+    joy: {
+        'inner-occipitofrontalis': 0.3,
+        'outer-occipitofrontalis': 0.3,
+        'orbicularis-oculi': 0.8,
+        'levator-labii': 0.5,
+        'zygomaticus': 1
+    },
+    ...
+}
+</code></pre>
+
+<p><code>inner-</code> and <code>outer-</code> <code>occipitofrontalis</code> pull the forehead and eyebrows up.  <code>orbicularis-oculi</code> squints the eyes.  <code>levator-labii</code> makes the face sneer.  <code>zygomaticus</code> pulls the corners of the mouth out and up.  All together, this gives the expression of <code>joy</code>.</p>
+
+<h1>Math</h1>
+
+<p>Unlike some other libraries based on Scott McCloud's charts, <code>facemotion.js</code> allows mixes of emotions.  This is accomplished by modeling muscles as springs and just running the physics simulation.</p>
+
+<p>Each point in each feature is anchored in place by a small restoring spring.  If you'll recall, the formula for spring force is <code>F = -k*dx</code>.  Since we're working in 2 dimensions, these are all vector calculations.  Muscle engagement is defined as a parameter from 0-1 which controls both the free-length of the spring as well as the <code>k</code> value of the spring.</p>
+
+<p>From <code>face.computePull(point, muscle, engagement)</code>:</p>
+
+<pre><code>freeLength = (point.origin - muscle.origin).length - (muscle.stroke * engagement);
+springDisplacement = (muscle.origin - point).normalize( (point - muscle.origin).length - freeLength) // this is '-k'
+</code></pre>
+
+<p>The <code>point.normalize()</code> function in paper takes an argument defining the length to normalize to.</p>
+
+<pre><code>muscleForce = springDisplacement * muscle.weight * muscle.strength * engagement
+</code></pre>
+
+<p>To figure out the movement of the point, we calculate the force from each muscle as well as the restoring spring, then sum them and integrate twice.  See <code>face.resolvePoint(point)</code></p>
+
+<h1>License</h1>
+
+<p>The MIT License (MIT)</p>
+
+<p>Copyright (c) 2014 Paul Mandel</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p></div>
       </section>
       <footer>
         <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		
+
   </body>
 </html>
