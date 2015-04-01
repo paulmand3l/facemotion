@@ -107,7 +107,7 @@ Face = (function() {
 
   FaceConstructor.prototype.setMuscles = function(musclePulls) {
     for (var muscle in musclePulls) {
-      face.muscles[muscle] = musclePulls[muscle];
+      this.muscles[muscle] = musclePulls[muscle];
     }
   };
 
