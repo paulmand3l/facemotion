@@ -91,7 +91,7 @@ Face = (function() {
     }
 
     // Calculate new muscle values from emotion sliders
-    for (var emotion in this.recipes) {
+    for (var emotion in emotions) {
       var muscles = this.recipes[emotion];
       var pull = emotions[emotion];
 
